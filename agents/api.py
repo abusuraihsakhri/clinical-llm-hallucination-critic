@@ -1,19 +1,17 @@
-"""
-FastAPI REST API Server for Clinical Llm Hallucination Critic.
-"""
-from typing import Dict, Any, List
+"""FastAPI interface for the deterministic prototype."""
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard
-from .models import SystemTaskPayload, ConsensusDossier
+
+from .base import AuditLogger, SecurityException
+from .models import SystemTaskPayload
 from .supervisor import SystemSupervisor
 
 supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
-    title="Clinical Llm Hallucination Critic API",
-    description="Enterprise Distributed Component Platform (Clinical & Biomedical AI)",
-    version="3.0.0-ENTERPRISE",
+    title="Clinical LLM Hallucination Critic API",
+    description="Deterministic rule-based prototype API for testing critic workflow plumbing.",
+    version="2.1.0",
 )
 
 
@@ -23,7 +21,12 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "clinical-llm-hallucination-critic", "domain": "Clinical & Biomedical AI", "standard": "CAP / CLSI / ISO Standards", "version": "3.0.0-ENTERPRISE"}
+    return {
+        "status": "HEALTHY",
+        "service": "clinical-llm-hallucination-critic",
+        "mode": "rule-based prototype",
+        "version": "2.1.0",
+    }
 
 
 @app.get("/metrics")
@@ -31,23 +34,24 @@ def metrics():
     return {
         "dossiers_processed_total": len(supervisor.dossier_registry),
         "audit_blocks_total": len(AuditLogger.get_trail()),
-        "system_status": "NOMINAL_OPTIMAL"
+        "system_status": "READY",
     }
 
 
 @app.post("/api/audit")
 def api_audit(payload: SystemTaskPayload):
-    dossier = supervisor.process_task(payload)
-    return dossier.to_dict()
+    try:
+        return supervisor.process_task(payload).to_dict()
+    except SecurityException as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/api/chat")
 def api_chat(req: ChatRequest):
     try:
-        ans = supervisor.query_supervisory_chat(req.query)
-        return {"response": ans}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return {"response": supervisor.query_supervisory_chat(req.query)}
+    except SecurityException as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/api/audit/logs")
