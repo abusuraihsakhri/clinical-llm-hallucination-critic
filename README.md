@@ -1,191 +1,99 @@
-# Clinical LLM Hallucination Critic (MedFact-Critic)
+# Clinical LLM Hallucination Critic
 
-> **Domain:** Clinical NLP, Natural Language Inference (NLI), & Biomedical Decision Intelligence  
-> **Reference Guidelines & Standards:** CAP / CLSI / ISO Standards & Natural Language Inference (NLI) Clinical Verification Guidelines
+A deterministic rule-based prototype for testing the plumbing around a clinical-LLM critic workflow: structured inputs, rule evaluation, alert aggregation, CSV batch processing, a small FastAPI surface, and an HMAC-chained in-memory audit log.
 
-<div align="center">
+> **Important:** this repository is a software prototype. It does **not** currently perform natural-language inference, EHR lookup, citation verification, biomedical literature retrieval, clinical validation, or automated de-identification. It is not intended for clinical decision-making.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![CI/CD](https://img.shields.io/badge/CI%2FCD-Passing-brightgreen.svg)
+## What it currently does
 
-</div>
+The canonical workflow in `agents/` evaluates three explicit rules: a primary metric above `25`, a secondary metric above `12` or a manual critical flag, and configured keywords in the status descriptor. The resulting alerts are aggregated into routine, elevated, or critical states. These thresholds are demonstration values, not clinical standards.
 
----
+The project also provides:
 
-## 📖 Overview
+- a CLI for single-case evaluation, CSV batch processing, audit-chain verification, and the optional API server;
+- an in-memory HMAC-SHA256 audit chain with full signature verification;
+- a heuristic sensitive-data pattern screen for common identifiers;
+- a browser-only GitHub Pages interface that mirrors the deterministic rules without sending form data to a server;
+- automated tests, linting, package build checks, and dependency auditing in GitHub Actions.
 
-**Clinical LLM Hallucination Critic (`MedFact-Critic`)** provides an air-gapped, multi-agent evaluation harness to systematically detect, classify, and mitigate clinical hallucinations in Large Language Model (LLM) outputs. The engine cross-references generated clinical summaries, diagnoses, and therapeutic assertions against structured Electronic Health Records (EHR), laboratory reference ranges, and biomedical literature grounding.
+## Browser application
 
-### Core Objectives
-1. **Extraction & Grounding**: Extract discrete biomedical claims and entity assertions from clinical text.
-2. **Entailment & Fact-Checking**: Verify claims using Natural Language Inference (NLI) scoring against authoritative knowledge bases and structured patient records.
-3. **Multi-Agent Consensus**: Coordinate specialized workers (Invariant QC, Safety Escalation, Protocol Conformance) to triage anomalies with cryptographic provenance.
-4. **Auditability & Privacy**: Zero-PHI outbound interception combined with SHA-256 HMAC cryptographic chain auditing.
+The static application is in `docs/` and is deployed by `.github/workflows/pages.yml`. It uses plain HTML, CSS, and JavaScript so the page loads quickly and does not require Pyodide. The browser implementation mirrors the same three deterministic rules as the Python workflow.
 
----
+## CLI
 
-## 🔬 Clinical Evaluation Metrics & Mathematical Formulas
-
-The critic evaluates clinical claims across three rigorous quantitative dimensions:
-
-### 1. Natural Language Inference Entailment Score ($S_{\text{NLI}}$)
-Given a clinical claim hypothesis $h_i$ and EHR/ground-truth premise set $P$:
-
-$$\mathcal{P}(\text{Entailment} \mid h_i, P) = \frac{\exp(z_{\text{entail}})}{\exp(z_{\text{entail}}) + \exp(z_{\text{neutral}}) + \exp(z_{\text{contradict}})}$$
-
-The Composite Entailment Score is the weighted average across all $N$ asserted claims:
-
-$$S_{\text{NLI}} = \frac{1}{\sum_{i=1}^N w_i} \sum_{i=1}^N w_i \cdot \mathcal{P}(\text{Entailment} \mid h_i, P)$$
-
-where $w_i$ denotes the clinical criticality weight of claim $i$ (e.g., $w_i = 3.0$ for medication dosing; $w_i = 1.0$ for historical background).
-
-### 2. Hallucination Severity Index ($\text{HSI}$)
-Calculates penalization based on contradictory assertions and safety breaches:
-
-$$\text{HSI} = \sum_{i=1}^N \left( \alpha \cdot \mathbb{I}(\text{Contradiction}_i) + \beta \cdot \text{SeverityWeight}_i + \gamma \cdot \mathbb{I}(\text{Unreferenced Entity}_i) \right)$$
-
-* Operational Boundary: $\text{Primary Metric} \le 25.0$ (Nominal threshold)
-* Critical Threshold: $> 50.0$ triggers immediate `CRITICAL_STAT_PANIC` and mandatory recalibration.
-
-### 3. Brier Calibration Score & Reliability
-Monitors supervisor probability calibration against confirmed clinical consensus:
-
-$$\text{BS} = \frac{1}{M} \sum_{k=1}^M \left( \hat{p}_k - y_k \right)^2$$
-
-where $\hat{p}_k$ is the critic confidence probability and $y_k \in \{0, 1\}$ is actual verified factual correctness.
-
----
-
-## 📊 Benchmark Datasets & Performance Baselines
-
-Evaluation across standard clinical hallucination benchmarks:
-
-| Benchmark Dataset | Domain / Modality | Total Claims | MedFact-Critic Precision | Recall (Hallucinations) | F1 Score |
-|:------------------|:------------------|:------------:|:------------------------:|:-----------------------:|:--------:|
-| **MedFact-EHR-Bench** | Discharge Summaries & EHR Notes | 1,500 | 96.4% | 94.8% | **0.956** |
-| **PubMed-QA-Critic** | Biomedical Literature Q&A | 2,200 | 95.1% | 93.2% | **0.941** |
-| **MIMIC-IV-Claims** | Critical Care Lab Summaries | 3,800 | 97.8% | 96.5% | **0.971** |
-| **BioPharma-Dosage** | Pharmacotherapy & Posology | 950 | 99.1% | 98.4% | **0.987** |
-
----
-
-## ⚙️ Architecture & Multi-Agent Workflow
-
-```
-[ Clinical LLM Output / Telemetry ]
-               │
-               ▼
-   [ Zero-PHI Interceptor ] ──(Block MRN / PII)──► [ Quarantine Alert ]
-               │
-               ▼
- ┌─────────────────────────────────────────────────────────┐
- │               SystemSupervisor Coordinator               │
- ├────────────────────────────┬────────────────────────────┤
- │                            │                            │
- ▼                            ▼                            ▼
-[ InvariantQCWorker ]   [ SafetyEscalationWorker ]   [ ProtocolConformanceWorker ]
- • Metric Bounds Check   • Emergency Interlocks       • NLI Spec Conformance
- • Assay Discrepancies   • Secondary Kinetics         • Discordance Triage
- └────────────────────────────┼────────────────────────────┘
-                              │
-                              ▼
-                [ Consensus Dossier Builder ]
-                              │
-                              ▼
-             [ HMAC-SHA256 Cryptographic Audit ]
-```
-
----
-
-## 💻 CLI Quickstart & Usage
-
-The application provides a unified command-line interface `cli.py` for audit execution, supervisory querying, and batch processing.
-
-### 1. Single Task Audit
-Evaluate a single clinical LLM extraction task with target parameters:
+Install the core package:
 
 ```bash
-python cli.py audit --task-id TASK-2026-001 --target TARGET-GEN-01 --primary 28.5 --secondary 14.2 --critical --status DISCORDANT
+python -m pip install .
 ```
 
-### 2. Supervisory Chat Query
-Query system configuration, operational thresholds, or applied clinical standards:
+Run a single evaluation:
 
 ```bash
-python cli.py chat What clinical standards and bounds govern hallucination scoring?
+clinical-llm-hallucination-critic audit \
+  --task-id TASK-001 \
+  --target TARGET-01 \
+  --primary 28.4 \
+  --secondary 14.2 \
+  --status DISCORDANT
 ```
 
-### 3. Batch CSV Processing
-Process multiple case records from an input CSV file and write results with cryptographic hashes:
+Process the included sample CSV:
 
 ```bash
-# Short flags
-python cli.py batch -i sample.csv -o results.csv
-
-# Long flags
-python cli.py batch --input sample.csv --output results.csv
+clinical-llm-hallucination-critic batch -i sample.csv -o results.csv
 ```
 
-### 4. Verify Cryptographic Audit Trail
-Verify the cryptographic integrity of the in-memory HMAC-SHA256 audit ledger:
+Verify the current in-memory audit chain:
 
 ```bash
-python cli.py verify-audit
+clinical-llm-hallucination-critic verify-audit
 ```
 
-### 5. Launch REST API Server
-Start the local FastAPI service:
+## Optional API server
+
+Install the server extra and start FastAPI locally:
 
 ```bash
-python cli.py serve --host 127.0.0.1 --port 8000
+python -m pip install ".[server]"
+clinical-llm-hallucination-critic serve --host 127.0.0.1 --port 8000
 ```
 
----
+Endpoints are `/health`, `/metrics`, `/api/audit`, `/api/chat`, and `/api/audit/logs`. The chat endpoint currently uses only the deterministic mock provider. Unsupported provider names fail explicitly rather than silently substituting a mock implementation.
 
-## 📋 Input Data Schema (`sample.csv`)
+## Privacy and security scope
 
-The input CSV requires the following columns for batch processing:
+`PHIGuard` blocks a small set of identifier-like regex patterns before selected processing and audit operations. This is a defensive convenience only; it is not a comprehensive PHI detector, de-identification method, HIPAA Safe Harbor implementation, or substitute for a validated privacy pipeline.
 
-| Column Name | Data Type | Description | Example |
-|:------------|:---------:|:------------|:--------|
-| `task_id` | `str` | Unique clinical task identifier | `TASK-001` |
-| `target_identifier` | `str` | Specimen, patient case, or target code | `TARGET-01` |
-| `primary_metric` | `float` | Primary Hallucination Metric / Deviation score | `28.4` |
-| `secondary_metric` | `float` | Secondary kinetic or confidence index | `14.2` |
-| `is_critical_flag` | `bool` | High-priority or STAT escalation flag (`True`/`False`) | `True` |
-| `status_descriptor` | `str` | Clinical status descriptor (`NOMINAL`, `DISCORDANT`, `ANOMALY`) | `DISCORDANT` |
+The audit logger uses HMAC-SHA256 and verifies every stored signature and chain link. If `AUDIT_SECRET_KEY` is unset, a random ephemeral key is generated for the process. Set `AUDIT_SECRET_KEY` when audit signatures must remain verifiable across restarts. The audit trail is in memory only and is not a durable compliance log.
 
----
-
-## 🛡️ Security & Privacy Guardrails
-
-* **Zero-PHI Interception:** Built-in regex guards actively intercept protected health information (Medical Record Numbers, SSNs, phone numbers) before processing.
-* **Tamper-Evident Audit Logging:** Every dossier generation computes an HMAC-SHA256 hash linked to previous states, preventing log alteration.
-* **Model Agnostic Adapter:** Clean abstractions supporting local offline models (via Ollama) or closed-environment mock providers.
-
----
-
-## 🧪 Testing & Verification
-
-Run the full pytest suite:
+## Development and verification
 
 ```bash
+python -m pip install -e ".[server,dev]"
+ruff check .
+python -m compileall -q agents medfact_critic cli.py enrichment.py simulator.py
 python -m pytest -p no:zarr -v
+python -m build
+python -m pip_audit
 ```
 
-Execute a CLI batch smoke test:
+GitHub Actions runs the checks on Python 3.10, 3.11, and 3.12. `sample.csv` can be used for the CLI smoke test.
 
-```bash
-python cli.py batch -i sample.csv -o out_smoke.csv
-python -c "import os; assert os.path.exists('out_smoke.csv')"
-```
+## Project structure
 
----
+- `agents/` — canonical rule evaluation, privacy guard, audit chain, API, and mock model adapter.
+- `cli.py` — canonical command-line interface.
+- `medfact_critic/` — compatibility package retained for existing imports.
+- `enrichment.py` — experimental threshold-based helper modules retained for compatibility.
+- `docs/` — static GitHub Pages application.
+- `tests/` — automated tests.
 
-## 📄 License
+## Browser compatibility
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The Pages UI targets current Chrome, Edge, Firefox, and Safari. It uses the Web Crypto API only to display a local SHA-256 fingerprint of the form input; that fingerprint is not the Python audit HMAC.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
