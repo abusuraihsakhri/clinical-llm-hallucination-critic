@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Clinical LLM Hallucination Critic</title>
+  <meta name="description" content="Browser demo of the repository's deterministic rule-based critic workflow.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Rule-based prototype</p>
+        <h1>Clinical LLM Hallucination Critic</h1>
+        <p class="subtitle">Test the repository's current deterministic thresholds directly in your browser.</p>
+      </div>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle color theme" title="Toggle color theme">◐</button>
+    </header>
+
+    <section class="notice" aria-label="Scope notice">
+      <strong>Scope:</strong> this is a software demonstration. It does not perform NLI, EHR lookup, citation verification, de-identification, or clinical decision support.
+    </section>
+
+    <div class="workspace">
+      <section class="panel input-panel" aria-labelledby="input-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">Input</p>
+            <h2 id="input-title">Evaluate a case</h2>
+          </div>
+          <button id="reset-button" class="text-button" type="button">Reset</button>
+        </div>
+
+        <form id="critic-form">
+          <div class="form-grid">
+            <label>
+              <span>Task ID</span>
+              <input id="task-id" name="taskId" type="text" value="TASK-001" maxlength="128" required>
+            </label>
+            <label>
+              <span>Target ID</span>
+              <input id="target-id" name="targetId" type="text" value="TARGET-01" maxlength="128" required>
+            </label>
+            <label>
+              <span>Primary metric</span>
+              <input id="primary-metric" name="primaryMetric" type="number" value="28.4" step="any" required>
+              <small>Rule triggers above 25</small>
+            </label>
+            <label>
+              <span>Secondary metric</span>
+              <input id="secondary-metric" name="secondaryMetric" type="number" value="14.2" step="any" required>
+              <small>Rule triggers above 12</small>
+            </label>
+            <label class="wide-field">
+              <span>Status descriptor</span>
+              <input id="status-descriptor" name="statusDescriptor" type="text" value="DISCORDANT" maxlength="256">
+              <small>Flags: discordant, anomaly, mutant, violation, fail, reject</small>
+            </label>
+            <label class="check-field">
+              <input id="critical-flag" name="criticalFlag" type="checkbox">
+              <span>Manual critical flag</span>
+            </label>
+          </div>
+
+          <button id="analyze-button" class="primary-button" type="submit">Analyze</button>
+        </form>
+      </section>
+
+      <section class="panel result-panel" aria-labelledby="result-title" aria-live="polite">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">Result</p>
+            <h2 id="result-title">Rule evaluation</h2>
+          </div>
+          <span id="status-chip" class="status-chip routine">Routine</span>
+        </div>
+
+        <div class="summary-grid">
+          <div class="metric-card">
+            <span>Alerts</span>
+            <strong id="alert-count">0</strong>
+          </div>
+          <div class="metric-card">
+            <span>Integrity state</span>
+            <strong id="integrity-state">Validated</strong>
+          </div>
+        </div>
+
+        <div id="rule-list" class="rule-list"></div>
+
+        <div class="result-footer">
+          <span>Input fingerprint</span>
+          <code id="fingerprint">—</code>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <span>Runs locally in the browser; no form data is transmitted.</span>
+      <a href="https://github.com/abusuraihsakhri/clinical-llm-hallucination-critic">Source repository</a>
+    </footer>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
