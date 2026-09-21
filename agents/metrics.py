@@ -34,7 +34,7 @@ class SystemMetricsCollector:
         avg_latency = self.processing_latency_sum / max(1, self.tasks_total)
         sys_lbl = self.system_name
         p_lines = [
-            "# HELP system_tasks_total Total count of distributed component tasks processed",
+            "# HELP system_tasks_total Total rule-evaluation tasks processed",
             "# TYPE system_tasks_total counter",
             f'system_tasks_total{{system="{sys_lbl}"}} {self.tasks_total}',
             "",
@@ -44,7 +44,7 @@ class SystemMetricsCollector:
             f'alerts_triggered_total{{system="{sys_lbl}",urgency="ELEVATED_RISK"}} {self.elevated_alerts_total}',
             f'alerts_triggered_total{{system="{sys_lbl}",urgency="ROUTINE"}} {self.routine_tasks_total}',
             "",
-            "# HELP phi_outbound_blocks_total Total PHI outbound guard blocks",
+            "# HELP phi_outbound_blocks_total Total sensitive-pattern blocks",
             "# TYPE phi_outbound_blocks_total counter",
             f'phi_outbound_blocks_total{{system="{sys_lbl}"}} {self.phi_blocks_total}',
             "",

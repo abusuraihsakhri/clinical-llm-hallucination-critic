@@ -1,9 +1,12 @@
-"""
-Enrichment Feature Implementation for clinical-llm-hallucination-critic.
-Generated based on domain-specific requirements in specifications.
+"""Compatibility threshold helpers retained from the original prototype.
+
+Despite their historical names, these classes do not classify hallucinations,
+verify sources, estimate hallucination rates, calibrate a critic, or generate
+evidence-based mitigation advice. They apply the same numeric threshold pattern
+under separate feature labels.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 import datetime
 import math
 import json
@@ -38,14 +41,14 @@ class HallucinationTypeClassificationEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Hallucination Type Classification: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Hallucination Type Classification proxy: value {primary_value:.2f} exceeded {self.threshold * 2:.2f}")
+            recs.append("Review the input, source data, and configured threshold manually.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Hallucination Type Classification: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review the input and supporting source data manually.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Input is within the configured demonstration threshold.")
 
         res = HallucinationTypeClassificationEngineResult(
             feature_name="Hallucination Type Classification",
@@ -88,14 +91,14 @@ class SourceVerificationEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Source Verification: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Source Verification proxy: value {primary_value:.2f} exceeded {self.threshold * 2:.2f}")
+            recs.append("Review the input, source data, and configured threshold manually.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Source Verification: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review the input and supporting source data manually.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Input is within the configured demonstration threshold.")
 
         res = SourceVerificationEngineResult(
             feature_name="Source Verification",
@@ -138,14 +141,14 @@ class HallucinationRateTrackingEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Hallucination Rate Tracking: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Hallucination Rate Tracking proxy: value {primary_value:.2f} exceeded {self.threshold * 2:.2f}")
+            recs.append("Review the input, source data, and configured threshold manually.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Hallucination Rate Tracking: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review the input and supporting source data manually.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Input is within the configured demonstration threshold.")
 
         res = HallucinationRateTrackingEngineResult(
             feature_name="Hallucination Rate Tracking",
@@ -188,14 +191,14 @@ class CriticCalibrationEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Critic Calibration: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Critic Calibration proxy: value {primary_value:.2f} exceeded {self.threshold * 2:.2f}")
+            recs.append("Review the input, source data, and configured threshold manually.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Critic Calibration: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review the input and supporting source data manually.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Input is within the configured demonstration threshold.")
 
         res = CriticCalibrationEngineResult(
             feature_name="Critic Calibration",
@@ -238,14 +241,14 @@ class HallucinationMitigationSuggestionsEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Hallucination Mitigation Suggestions: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Hallucination Mitigation Suggestions proxy: value {primary_value:.2f} exceeded {self.threshold * 2:.2f}")
+            recs.append("Review the input, source data, and configured threshold manually.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Hallucination Mitigation Suggestions: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review the input and supporting source data manually.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Input is within the configured demonstration threshold.")
 
         res = HallucinationMitigationSuggestionsEngineResult(
             feature_name="Hallucination Mitigation Suggestions",

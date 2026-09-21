@@ -2,7 +2,7 @@
 Autonomous Bayesian Calibration & Active Learning Feedback Engine for clinical-llm-hallucination-critic.
 """
 import math
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
 from pydantic import BaseModel, Field
 
 class WorkerPerformanceMetric(BaseModel):
@@ -13,7 +13,7 @@ class WorkerPerformanceMetric(BaseModel):
     dynamic_weight: float = 1.0
 
 class ActiveLearningEngine:
-    """Continuously refines sub-agent voting weights based on consensus feedback."""
+    """Track simple concordance ratios and an uncertainty review buffer."""
 
     def __init__(self, system_name: str = "Clinical Llm Hallucination Critic"):
         self.system_name = system_name
@@ -32,11 +32,11 @@ class ActiveLearningEngine:
         if was_concordant:
             m.concordant_decisions += 1
         
-        # Update dynamic Bayesian reliability weight
+        # Scale the observed concordance ratio into a bounded demonstration weight
         acc = m.concordant_decisions / max(1, m.total_evaluations)
         m.dynamic_weight = round(max(0.2, min(2.0, acc * 1.5)), 3)
 
-        # Flag borderline cases for offline active learning review
+        # Retain borderline confidence values for optional manual review
         if 0.45 <= confidence_score <= 0.65:
             self.uncertainty_buffer.append({
                 "worker": worker_name,
