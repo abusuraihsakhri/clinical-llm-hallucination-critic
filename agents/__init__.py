@@ -1,7 +1,3 @@
-"""
-Clinical Llm Hallucination Critic — Enterprise Automated Analytical Suite.
-Domain: Clinical & Biomedical AI
-Standard: CAP / CLSI / ISO Standards
+"""Core rule-evaluation package for clinical-llm-hallucination-critic."""
 
-"""
-__version__ = "3.0.0-ENTERPRISE"
+__version__ = "2.1.0"
